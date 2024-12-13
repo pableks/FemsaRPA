@@ -30,8 +30,7 @@ class FEMSAAutomation:
         # Setup Chrome
         chrome_options = Options()
         chrome_options.add_argument('--headless')
-        chrome_options.add_argument('--no-sandbox')  # Important for Ubuntu
-        chrome_options.add_argument('--disable-dev-shm-usage')  # Important for Ubuntu
+
         chrome_options.add_argument('--start-maximized')
         chrome_options.add_argument('--disable-notifications')
         chrome_options.add_argument('--disable-infobars')
