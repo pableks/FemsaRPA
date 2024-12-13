@@ -659,43 +659,43 @@ class FEMSAAutomation:
             self.driver.switch_to.frame(0)
             
             print("Waiting for generate button...")
-            generate_button = WebDriverWait(self.driver, 30).until(
+            generate_button2 = WebDriverWait(self.driver, 30).until(
                 EC.visibility_of_element_located((By.CSS_SELECTOR, "vaadin-button.filter-button"))
             )
             time.sleep(2)
-            self.driver.execute_script("arguments[0].click();", generate_button)
+            self.driver.execute_script("arguments[0].click();", generate_button2)
             print("Generate button clicked")
             time.sleep(10)
             
             print("Waiting for download button...")
-            download_button = WebDriverWait(self.driver, 30).until(
+            download_button2 = WebDriverWait(self.driver, 30).until(
                 EC.element_to_be_clickable((By.ID, "btn-download"))
             )
-            self.driver.execute_script("arguments[0].click();", download_button)
+            self.driver.execute_script("arguments[0].click();", download_button2)
             print("Download button clicked")
             time.sleep(5)
             
             print("Selecting download report option...")
-            download_report = WebDriverWait(self.driver, 30).until(
+            download_report2 = WebDriverWait(self.driver, 30).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, ".vaadin-menu-item:nth-child(1) > .link-button"))
             )
-            self.driver.execute_script("arguments[0].click();", download_report)
+            self.driver.execute_script("arguments[0].click();", download_report2)
             print("Download report option clicked")
             time.sleep(5)
             
             print("Selecting CSV option...")
-            csv_option = WebDriverWait(self.driver, 30).until(
+            csv_option2 = WebDriverWait(self.driver, 30).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "vaadin-radio-button:nth-child(2) > label"))
             )
-            self.driver.execute_script("arguments[0].click();", csv_option)
+            self.driver.execute_script("arguments[0].click();", csv_option2)
             print("CSV option clicked")
             time.sleep(3)
             
             print("Clicking apply button...")
-            apply_button = WebDriverWait(self.driver, 30).until(
+            apply_button2 = WebDriverWait(self.driver, 30).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "vaadin-button.filter-apply-button"))
             )
-            self.driver.execute_script("arguments[0].click();", apply_button)
+            self.driver.execute_script("arguments[0].click();", apply_button2)
             print("Apply button clicked")
             
             self.driver.switch_to.default_content()
