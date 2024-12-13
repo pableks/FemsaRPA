@@ -677,7 +677,7 @@ class FEMSAAutomation:
             
             print("Selecting download report option...")
             download_report = WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='menuitem']:first-child"))
+                EC.element_to_be_clickable((By.CSS_SELECTOR, ".vaadin-menu-item:nth-child(1) > .link-button"))
             )
             self.driver.execute_script("arguments[0].click();", download_report)
             print("Download report option clicked")
@@ -685,7 +685,7 @@ class FEMSAAutomation:
             
             print("Selecting CSV option...")
             csv_option = WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "vaadin-radio-button[value='CSV'] label"))
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "vaadin-radio-button:nth-child(2) > label"))
             )
             self.driver.execute_script("arguments[0].click();", csv_option)
             print("CSV option clicked")
