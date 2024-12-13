@@ -710,7 +710,6 @@ class FEMSAAutomation:
                 print("CSV link clicked")
             except Exception as e:
                 print("Error finding CSV link:", str(e))
-                print("Current page source:", self.driver.page_source)
                 raise
             
             time.sleep(15)
@@ -719,7 +718,6 @@ class FEMSAAutomation:
         except Exception as e:
             print(f"Error downloading inventory report: {str(e)}")
             print("Current URL:", self.driver.current_url)
-            print("Current page source:", self.driver.page_source)
             raise
     def convert_date_format(self, date_str):
         """Convert date from DD-MM-YYYY to YYYY-MM-DD format"""
