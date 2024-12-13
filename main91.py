@@ -698,19 +698,19 @@ class FEMSAAutomation:
             self.driver.execute_script("arguments[0].click();", apply_button2)
             print("Apply button clicked")
             
+             # Handle the final CSV download
             self.driver.switch_to.default_content()
-            time.sleep(15)
+            time.sleep(5)
             
-            print("Looking for CSV download link...")
-            try:
-                csv_link = WebDriverWait(self.driver, 45).until(
-                    EC.presence_of_element_located((By.XPATH, "//a[contains(@href,'detalleinventario_')]"))
-                )
-                self.driver.execute_script("arguments[0].click();", csv_link)
-                print("CSV link clicked")
-            except Exception as e:
-                print("Error finding CSV link:", str(e))
-                raise
+            # Find and click the CSV download link
+            csv_link2 = self.wait.until(
+                EC.presence_of_element_located((By.PARTIAL_LINK_TEXT, "detalleinventario_"))
+            )
+            csv_link2.click()
+            
+            # Wait for download to complete
+            time.sleep(5)
+            print(f"Report {iteration + 1} downloaded successfully")
             
             time.sleep(15)
             print(f"Inventory report {iteration + 1} download process completed")
