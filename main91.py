@@ -637,7 +637,7 @@ class FEMSAAutomation:
             
             # Handle the final CSV download
             self.driver.switch_to.default_content()
-            time.sleep(5)
+            time.sleep(2)
             
             # Find and click the CSV download link
             csv_link = self.wait.until(
@@ -677,7 +677,7 @@ class FEMSAAutomation:
             
             print("Selecting download report option...")
             download_report2 = WebDriverWait(self.driver, 30).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, ".vaadin-menu-item:nth-child(1) > .link-button"))
+                EC.element_to_be_clickable((By.CSS_SELECTOR, ".vaadin-menu-item:nth-child(2) > .link-button"))
             )
             self.driver.execute_script("arguments[0].click();", download_report2)
             print("Download report option clicked")
@@ -700,7 +700,7 @@ class FEMSAAutomation:
             
              # Handle the final CSV download
             self.driver.switch_to.default_content()
-            time.sleep(5)
+            time.sleep(2)
             
             # Find and click the CSV download link
             csv_link2 = self.wait.until(
@@ -854,25 +854,40 @@ class FEMSAAutomation:
                         if os.path.exists(temp_extraction_dir):
                             import shutil
                             shutil.rmtree(temp_extraction_dir)
-                        
-            else:
-                # For inventory reports, handle the CSV directly
-                time.sleep(5)  # Wait for download to complete
+            if report_type == 'inventario':
+                # Get the latest zip files from current iteration
+                latest_zips = self.get_latest_zip()
                 
-                # Get the latest CSV file
-                csv_files = [f for f in os.listdir(zip_dir) if f.endswith('.csv')]
-                if csv_files:
-                    latest_csv = max(csv_files, key=lambda x: os.path.getctime(os.path.join(zip_dir, x)))
+                for zip_path in latest_zips:
+                    print(f"Processing ZIP file: {zip_path}")
                     
-                    if 'detalleinventario' in latest_csv.lower():
-                        old_path = os.path.join(zip_dir, latest_csv)
-                        new_name = f"{patterns['archivo_inventario']}{date_str}.csv"
-                        new_path = os.path.join(extraction_dir, new_name)
+                    # Create a temporary extraction directory for this specific zip
+                    temp_extraction_dir = os.path.join(extraction_dir, f'temp_{os.path.basename(zip_path)}')
+                    os.makedirs(temp_extraction_dir, exist_ok=True)
+                    
+                    try:
+                        # Extract only the latest zip to temporary directory
+                        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                            zip_ref.extractall(temp_extraction_dir)
                         
-                        print(f"Moving and renaming {latest_csv} to {new_name}")
-                        if os.path.exists(new_path):
-                            os.remove(new_path)
-                        os.rename(old_path, new_path)
+                        # Process files from temporary directory
+                        for file in os.listdir(temp_extraction_dir):
+                            if file.endswith('.csv') and 'detalleinventario' in file.lower():
+                                old_path = os.path.join(temp_extraction_dir, file)
+                                new_name = f"{patterns['archivo_inventario']}{date_str}.csv"
+                                new_path = os.path.join(extraction_dir, new_name)
+                                
+                                print(f"Moving and renaming {file} to {new_name}")
+                                if os.path.exists(new_path):
+                                    os.remove(new_path)
+                                os.rename(old_path, new_path)
+                    finally:
+                        # Clean up temporary directory
+                        if os.path.exists(temp_extraction_dir):
+                            import shutil
+                            shutil.rmtree(temp_extraction_dir)
+                        
+
             
             print(f"Successfully processed {report_type} files for iteration {iteration}")
             
