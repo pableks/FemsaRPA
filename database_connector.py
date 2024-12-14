@@ -75,7 +75,7 @@ class DatabaseConnector:
     def check_report_status(self, date: str, cliente: str, cadena: str = 'cruz verde') -> bool:
         """Check if report was already generated for given date"""
         query = """
-            SELECT estado FROM log_script_carga_cadena_cliente 
+            SELECT estado FROM log_script_descarga_cadena_cliente 
             WHERE cliente = %s AND cadena = %s AND DATE(created_at) = %s
         """
         result = self.execute_query(query, (cliente, cadena, date))
@@ -84,7 +84,7 @@ class DatabaseConnector:
     def log_report_generation(self, cliente: str, cadena: str, status: int = 0) -> bool:
         """Log report generation attempt"""
         query = """
-            INSERT INTO log_script_carga_cadena_cliente (cliente, cadena, created_at, estado)
+            INSERT INTO log_script_descarga_cadena_cliente (cliente, cadena, created_at, estado)
             VALUES (%s, %s, NOW(), %s)
         """
         return self.execute_insert(query, (cliente, cadena, status))
@@ -92,7 +92,7 @@ class DatabaseConnector:
     def update_report_status(self, cliente: str, cadena: str, status: int = 1) -> bool:
         """Update report generation status"""
         query = """
-            UPDATE log_script_carga_cadena_cliente 
+            UPDATE log_script_descarga_cadena_cliente 
             SET estado = %s, updated_at = NOW()
             WHERE cliente = %s AND cadena = %s 
             ORDER BY id DESC LIMIT 1

@@ -102,7 +102,7 @@ class FEMSAAutomation:
         try:
             query = """
                 SELECT estado, updated_at 
-                FROM log_script_carga_cadena_cliente 
+                FROM log_script_descarga_cadena_cliente 
                 WHERE cliente = %s 
                 AND cadena = 'cruz verde'
                 AND DATE(updated_at) = CURDATE()
