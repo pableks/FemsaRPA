@@ -203,69 +203,43 @@ class FEMSAAutomation:
 
 
     def generate_reports(self):
-        """Generate and download all required reports for both sales and inventory"""
         try:
-            # Check if reports already exist
-            if self.check_existing_report():
-                print(f"Reports already generated for {self.sales_dates['fecha']}")
-                return False
-
-            # Log generation attempt
-            self.db.log_report_generation(self.cliente, 'cruz verde')
-
-            # Get number of iterations based on unidad_negocio
-            iterations = self.client_info['unidad_negocio']
-            
             # Process Sales Reports
             print("Starting Sales Reports Generation...")
             self.navigate_to_sales_report()
             
-            for i in range(iterations):
-                print(f"Processing sales report iteration {i+1}/{iterations}")
-                
+            for i in range(self.client_info['unidad_negocio']):
                 if i == 0:
-                    # First iteration follows normal flow
-                    self.select_dropdown_option(i)
+                    self.select_dropdown_option(i, 'sales')  # Specify sales report type
                     self.set_date_range()
                     self.download_report(i)
-                    self.process_downloaded_files(i, 'ventas')  # Specify ventas
                 else:
-                    # Subsequent iterations use filter button
                     self.filter_button()
-                    self.select_dropdown_option(i)
+                    self.select_dropdown_option(i, 'sales')  # Specify sales report type
                     self.download_report(i)
-                    self.process_downloaded_files(i, 'ventas')  # Specify ventas
-                    time.sleep(1)
-            
+                self.process_downloaded_files(i, 'ventas')
+                
             # Process Inventory Reports
             print("Starting Inventory Reports Generation...")
             self.navigate_to_inventory_report()
             
-            for i in range(iterations):
-                print(f"Processing inventory report iteration {i+1}/{iterations}")
-                
+            for i in range(self.client_info['unidad_negocio']):
                 if i == 0:
-                    # First iteration follows normal flow
-                    self.select_dropdown_option(i)
+                    self.select_dropdown_option(i, 'inventory')  # Specify inventory report type
                     self.download_report2(i)
-                    self.process_downloaded_files(i, 'inventario')  # Specify inventario
                 else:
-                    # Subsequent iterations use filter button
                     self.filter_button()
-                    self.select_dropdown_option(i)
+                    self.select_dropdown_option(i, 'inventory')  # Specify inventory report type
                     self.download_report2(i)
-                    self.process_downloaded_files(i, 'inventario')  # Specify inventario
-                    time.sleep(1)
-            
-            # Only update report status after both sales and inventory reports are complete
+                self.process_downloaded_files(i, 'inventario')
+                
             print("All reports generated successfully")
             self.logout()
             self.db.update_report_status(self.cliente, 'cruz verde', 1)
             return True
-            
+                
         except Exception as e:
             print(f"Report generation failed: {str(e)}")
-            # Log failure
             self.db.update_report_status(self.cliente, 'cruz verde', 0)
             raise
     def navigate_to_sales_report(self):
@@ -371,31 +345,50 @@ class FEMSAAutomation:
             print(f"Error checking session: {str(e)}")
             return False
 
-    def restart_session(self, target_method):
-        """Restart session and return to previous state"""
-        print("Restarting session...")
+    def restart_session(self, target_method, report_type='sales'):
+        """
+        Restart session and return to previous state based on report type
+        
+        Args:
+            target_method (str): The method that needs to be retried
+            report_type (str): Either 'sales' or 'inventory' to determine correct navigation
+        """
+        print(f"Restarting session for {report_type} report...")
         try:
             self.login()
             
-            # Map of methods to their navigation functions
+            # Map of methods to their navigation functions based on report type
             navigation_map = {
-                'get_dropdown_options': self.navigate_to_sales_report,
-                'select_dropdown_option': self.navigate_to_sales_report,
-                # Add other method mappings as needed
+                'sales': {
+                    'get_dropdown_options': self.navigate_to_sales_report,
+                    'select_dropdown_option': self.navigate_to_sales_report,
+                    'set_date_range': self.navigate_to_sales_report,
+                    'download_report': self.navigate_to_sales_report
+                },
+                'inventory': {
+                    'get_dropdown_options': self.navigate_to_inventory_report,
+                    'select_dropdown_option': self.navigate_to_inventory_report,
+                    'download_report2': self.navigate_to_inventory_report
+                }
             }
             
             # Execute the appropriate navigation function
-            if target_method in navigation_map:
-                navigation_map[target_method]()
-                print(f"Successfully navigated back to previous state for {target_method}")
+            if target_method in navigation_map[report_type]:
+                navigation_map[report_type][target_method]()
+                print(f"Successfully navigated back to previous state for {target_method} in {report_type} report")
                 return True
             return False
         except Exception as e:
             print(f"Error restarting session: {str(e)}")
             return False
 
-    def get_dropdown_options(self):
-        """Retrieve all available options from the dropdown with session handling"""
+    def get_dropdown_options(self, report_type='sales'):
+        """
+        Retrieve all available options from the dropdown with session handling
+        
+        Args:
+            report_type (str): Either 'sales' or 'inventory' to determine correct navigation
+        """
         max_retries = 3
         retry_count = 0
         
@@ -404,7 +397,7 @@ class FEMSAAutomation:
                 # Check session status
                 if not self.check_session_active():
                     print(f"Session expired, attempt {retry_count + 1}/{max_retries} to restart")
-                    if not self.restart_session('get_dropdown_options'):
+                    if not self.restart_session('get_dropdown_options', report_type):
                         raise Exception("Failed to restart session")
                 
                 # Switch to frame and proceed with dropdown options
@@ -454,10 +447,16 @@ class FEMSAAutomation:
                 retry_count += 1
                 if retry_count == max_retries:
                     raise Exception(f"Failed to get dropdown options after {max_retries} attempts")
-                time.sleep(2)  # Wait before retrying
+                time.sleep(2)
 
-    def select_dropdown_option(self, index):
-        """Select dropdown option by index with session handling"""
+    def select_dropdown_option(self, index, report_type='sales'):
+        """
+        Select dropdown option by index with session handling
+        
+        Args:
+            index (int): Index of the option to select
+            report_type (str): Either 'sales' or 'inventory' to determine correct navigation
+        """
         max_retries = 3
         retry_count = 0
         
@@ -466,7 +465,7 @@ class FEMSAAutomation:
                 # Check session status
                 if not self.check_session_active():
                     print(f"Session expired, attempt {retry_count + 1}/{max_retries} to restart")
-                    if not self.restart_session('select_dropdown_option'):
+                    if not self.restart_session('select_dropdown_option', report_type):
                         raise Exception("Failed to restart session")
                 
                 self.driver.switch_to.default_content()
@@ -474,11 +473,30 @@ class FEMSAAutomation:
                 time.sleep(2)
                 
                 if not self.available_options:
-                    self.get_dropdown_options()
+                    self.get_dropdown_options(report_type)
 
                 if 0 <= index < len(self.available_options):
-                    # Rest of the existing select_dropdown_option code...
-                    # [Previous implementation remains the same]
+                    # Click select element to open dropdown
+                    select_element = self.wait.until(
+                        EC.presence_of_element_located((
+                            By.CSS_SELECTOR,
+                            "vaadin-select.bbr-filter-fields.bbr-filter-select"
+                        ))
+                    )
+                    select_element.click()
+                    time.sleep(2)
+
+                    # Select the specified option
+                    option = self.available_options[index]
+                    option_element = self.wait.until(
+                        EC.presence_of_element_located((
+                            By.CSS_SELECTOR,
+                            f"vaadin-item[value='{option['value']}']"
+                        ))
+                    )
+                    option_element.click()
+                    time.sleep(2)
+
                     return True
                 else:
                     print(f"Invalid index {index}. Available options: 0-{len(self.available_options)-1}")
@@ -489,7 +507,7 @@ class FEMSAAutomation:
                 retry_count += 1
                 if retry_count == max_retries:
                     raise Exception(f"Failed to select dropdown option after {max_retries} attempts")
-                time.sleep(2)  # Wait before retrying
+                time.sleep(2)
     def get_date_range(self, reference_date_str):
         """Calculate date range based on the reference date"""
         reference_date = datetime.strptime(reference_date_str, "%Y-%m-%d")
